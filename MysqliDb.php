@@ -2501,6 +2501,116 @@ class MysqliDb
                     $this->_query .= $this->_buildPair ($operator, $val);
         }
     }
+
+    /**
+     * Build partial query based on data.
+     * 
+     * @param  array  $data
+     * @return array
+     */
+    protected function buildQueryBulkInsert(array $data)
+    {
+        $main_qmark = [];
+        $data_arr = [];
+
+        foreach ($data as $val) {
+            $qmark = [];
+            foreach ($val as $v) {
+                $qmark[] = '?';
+                $data_arr[] = $v;
+            }
+            $main_qmark[] = '(' . implode(', ', $qmark) . ')';
+        }
+        unset($data);
+
+        $main_qmark = implode(', ', $main_qmark);
+
+        return [$main_qmark, $data_arr];
+    }
+
+    /**
+     * Bulk insert data to table
+     * 
+     * @param  string $table
+     * @param  array  $columns
+     * @param  array  $values
+     * 
+     * @return int|false
+     */
+    public function bulkInsert(string $table, array $columns, array $values)
+    {
+        $columns = implode(', ', $columns);
+        $values = $this->buildQueryBulkInsert($values);
+
+        $main_query = "INSERT INTO $table ($columns)";
+        $main_query .= " VALUES $values[0]";
+
+        $this->startTransaction();
+        $this->rawQuery($main_query, $values[1]);
+
+        if ($this->getLastErrno() === 0) {
+            $this->commit();
+            return $this->count;
+        }
+        
+        $this->rollback();
+        $this->count = 0;
+
+        return false;
+    }
+
+    /**
+     * Bulk update date to table.
+     * It used "ON DUPLICATE KEY UPDATE" syntax
+     * Which means table must need a primary/unque index.
+     * Otherwise it won't work.
+     *
+     * The first element of array $columns should
+     * contain the primary/unque index.
+     *
+     * Eg: [5, 'Harry']
+     * Where 5 belongs to 'id' column and it is
+     * the primary/unque index.
+     * 
+     * @param  string $table
+     * @param  array  $columns
+     * @param  array  $values
+     * 
+     * @return int|false
+     */
+    function bulkUpdate(string $table, array $columns, array $values)
+    {
+        $cloned_columns = $columns;
+        array_shift($cloned_columns);
+
+        $add_query = [];
+        foreach ($cloned_columns as $column) {
+            $add_query[] = "$column = VALUES($column)";
+        }
+        unset($cloned_columns);
+        $add_query = implode(', ', $add_query);
+
+        $columns = implode(', ', $columns);
+        $values = $this->buildQueryBulkInsert($values);
+
+        $main_query = "INSERT INTO $table ($columns) VALUES $values[0]";
+        $main_query .= " ON DUPLICATE KEY UPDATE $add_query";
+
+        $this->startTransaction();
+        $this->rawQuery($main_query, $values[1]);
+
+        if ($this->getLastErrno() === 0) {
+            $this->commit();
+            $this->count = $this->count / 2;
+
+            return $this->count;
+        }
+        
+        $this->rollback();
+        $this->count = 0;
+
+        return false;
+    }
 }
 
 // END class
