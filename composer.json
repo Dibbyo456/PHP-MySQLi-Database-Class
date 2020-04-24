@@ -1,6 +1,6 @@
 {
-    "name": "thingengineer/mysqli-database-class",
-    "description": "PHP MySQL Wrapper and object mapper which utilizes MySQLi and prepared statements",
+    "name": "dibbyo456/mysqli-database-class",
+    "description": "PHP MySQL Wrapper which utilizes MySQLi and prepared statements",
     "license": "GPL-3.0-or-later",
     "authors": [
         {
@@ -14,12 +14,18 @@
             "email": "a.butenka@gmail.com",
             "homepage": "http://smarttechdo.com",
             "role": "Developer"
+        },
+        {
+            "name": "Harry",
+            "email": "me@harry.plus",
+            "homepage": "https://harry.plus",
+            "role": "Developer"
         }
     ],
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=7.2.0"
     },
     "autoload": {
-        "files": ["MysqliDb.php", "dbObject.php"]
+        "files": ["MysqliDb.php"]
     }
 }
