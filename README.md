@@ -1,4 +1,7 @@
-MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
+**MysqliDb** -- Simple MySQLi wrapper with prepared statements
+
+This is a fork of [PHP-MySQLi-Database-Class](https://github.com/ThingEngineer/PHP-MySQLi-Database-Class "PHP-MySQLi-Database-Class") by [@ThingEngineer](https://github.com/ThingEngineer "@ThingEngineer") with 2 additional methods.
+
 <hr>
 
 ### Table of Contents
@@ -27,6 +30,9 @@ MysqliDb -- Simple MySQLi wrapper and object mapper with prepared statements
 **[Error Helpers](#error-helpers)**  
 **[Table Locking](#table-locking)**  
 
+#### New methods:
+**[Bulk Insert](#bulk-insert)**  
+**[Bulk Update](#bulk-update)**
 
 ### Installation
 To utilize this class, first import MysqliDb.php into your project, and require it.
@@ -129,17 +135,17 @@ if($id)
 Insert with functions use
 ```php
 $data = Array (
-	'login' => 'admin',
+    'login' => 'admin',
     'active' => true,
-	'firstName' => 'John',
-	'lastName' => 'Doe',
-	'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
-	// password = SHA1('secretpassword+salt')
-	'createdAt' => $db->now(),
-	// createdAt = NOW()
-	'expires' => $db->now('+1Y')
-	// expires = NOW() + interval 1 year
-	// Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
+    'firstName' => 'John',
+    'lastName' => 'Doe',
+    'password' => $db->func('SHA1(?)',Array ("secretpassword+salt")),
+    // password = SHA1('secretpassword+salt')
+    'createdAt' => $db->now(),
+    // createdAt = NOW()
+    'expires' => $db->now('+1Y')
+    // expires = NOW() + interval 1 year
+    // Supported intervals [s]econd, [m]inute, [h]hour, [d]day, [M]onth, [Y]ear
 );
 
 $id = $db->insert ('users', $data);
@@ -206,12 +212,12 @@ if(!$ids) {
 ### Update Query
 ```php
 $data = Array (
-	'firstName' => 'Bobby',
-	'lastName' => 'Tables',
-	'editCount' => $db->inc(2),
-	// editCount = editCount + 2;
-	'active' => $db->not()
-	// active = !active;
+    'firstName' => 'Bobby',
+    'lastName' => 'Tables',
+    'editCount' => $db->inc(2),
+    // editCount = editCount + 2;
+    'active' => $db->not()
+    // active = !active;
 );
 $db->where ('id', 1);
 if ($db->update ('users', $data))
@@ -285,9 +291,9 @@ Valid options are:
 
 ```php
 Array(
-	"fieldChar" => ';', 	// Char which separates the data
-	"lineChar" => '\r\n', 	// Char which separates the lines
-	"linesToIgnore" => 1	// Amount of lines to ignore at the beginning of the import
+    "fieldChar" => ';',     // Char which separates the data
+    "lineChar" => '\r\n',   // Char which separates the lines
+    "linesToIgnore" => 1    // Amount of lines to ignore at the beginning of the import
 );
 ```
 
@@ -317,14 +323,14 @@ You can also add optional parameters.
 Valid parameters:
 ```php
 Array(
-	"linesToIgnore" => 0,		// Amount of lines / rows to ignore at the beginning of the import
-	"rowTag"	=> "<user>"	// The tag which marks the beginning of an entry
+    "linesToIgnore" => 0,       // Amount of lines / rows to ignore at the beginning of the import
+    "rowTag"    => "<user>" // The tag which marks the beginning of an entry
 )
 ```
 
 Usage:
 ```php
-$options = Array("linesToIgnore" => 0, "rowTag"	=> "<user>"):
+$options = Array("linesToIgnore" => 0, "rowTag" => "<user>"):
 $path_to_file = "/home/john/file.xml";
 $db->loadXML("users", $path_to_file, $options);
 ```
@@ -558,9 +564,9 @@ Optionally you can use method chaining to call where multiple times without refe
 
 ```php
 $results = $db
-	->where('id', 1)
-	->where('login', 'admin')
-	->get('users');
+    ->where('id', 1)
+    ->where('login', 'admin')
+    ->get('users');
 ```
 
 ### Delete Query
@@ -831,3 +837,66 @@ $db->setLockMethod("READ")->lock(array("users", "log"));
 This will lock the tables **users** and **log** for **READ** access only.
 Make sure you use **unlock()* afterwards or your tables will remain locked!
 
+### Bulk Insert
+
+`bulkInsert()` is similar to `insertMulti()` but works in different way. `insertMulti()` uses a foreach loop to insert data one by one, which is slow. `bulkInsert()` however uses `INSERT INTO` statement to insert multiple data in a single query; which is approx **6x** faster.
+
+```php
+$data = [
+    [1, 'Tony', 34],
+    [2, 'Barry', 29]
+];
+$columns = ['id', 'name', 'age'];
+$db->bulkInsert('my_table', $columns, $data);
+
+// Gives:
+
+//   INSERT INTO 
+//      my_table (id, name, age)
+//   VALUES
+//      (1, 'Tony', 34),
+//      (2, 'Barry', 29);
+```
+
+If you set 4th argument to true then
+"INSERT IGNORE" will be used instead of "INSERT"
+
+Eg:
+
+```php
+$db->bulkInsert('my_table', $columns, $data, true);
+
+// Gives:
+
+//   INSERT IGNORE INTO 
+//      my_table (id, name, age)
+//   VALUES
+//      (1, 'Tony', 34),
+//      (2, 'Barry', 29);
+```
+
+### Bulk Update
+
+`bulkUpdate()` can be used to update multiple rows with single query. But it has as caveat. It uses `ON DUPLICATE KEY UPDATE` statment which means a tablemust need a PRIMARY or UNIQUE index key.
+
+**Remember**: The first element of array in `$columns` must need to be PRIMARY or UNIQUE index. In the below example **id** is PRIMARY KEY so it is the first element. Same goes with `$data` array.
+
+```php
+$data = [
+    [5, 'Harry', 12],
+    [8, 'Sam', 88]
+];
+$columns = ['id', 'name', 'age'];
+$db->bulkInsert('my_table', $columns, $data);
+
+// Gives:
+
+//   INSERT INTO 
+//      my_table (id, name, age)
+//   VALUES
+//      (1, 'Tony', 34),
+//      (2, 'Barry', 29)
+//   ON DUPLICATE KEY UPDATE
+//      name=VALUES(name),
+//      age=VALUES(age);
+```

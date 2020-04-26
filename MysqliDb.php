@@ -2521,7 +2521,6 @@ class MysqliDb
             }
             $main_qmark[] = '(' . implode(', ', $qmark) . ')';
         }
-        unset($data);
 
         $main_qmark = implode(', ', $main_qmark);
 
@@ -2534,15 +2533,21 @@ class MysqliDb
      * @param  string $table
      * @param  array  $columns
      * @param  array  $values
+     * @param  bool   If true then "INSERT IGNORE" will be used instead of "INSERT"
      * 
      * @return int|false
      */
-    public function bulkInsert(string $table, array $columns, array $values)
+    public function bulkInsert(string $table, array $columns, array $values, bool $insertIgnore = false)
     {
         $columns = implode(', ', $columns);
         $values = $this->buildQueryBulkInsert($values);
 
-        $main_query = "INSERT INTO $table ($columns)";
+        if ($insertIgnore) {
+            $main_query = "INSERT IGNORE INTO $table ($columns)";
+        } else {
+            $main_query = "INSERT INTO $table ($columns)";
+        }
+
         $main_query .= " VALUES $values[0]";
 
         $this->startTransaction();
@@ -2562,7 +2567,7 @@ class MysqliDb
     /**
      * Bulk update date to table.
      * It used "ON DUPLICATE KEY UPDATE" syntax
-     * Which means table must need a primary/unque index.
+     * Which means table must need a primary/unique index.
      * Otherwise it won't work.
      *
      * The first element of array $columns should
