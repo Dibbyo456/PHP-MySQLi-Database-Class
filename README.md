@@ -1,6 +1,6 @@
 **MysqliDb** -- Simple MySQLi wrapper with prepared statements
 
-This is a fork of [PHP-MySQLi-Database-Class](https://github.com/ThingEngineer/PHP-MySQLi-Database-Class "PHP-MySQLi-Database-Class") by [@ThingEngineer](https://github.com/ThingEngineer "@ThingEngineer") with 2 additional methods.
+This is a fork of [PHP-MySQLi-Database-Class](https://github.com/ThingEngineer/PHP-MySQLi-Database-Class "PHP-MySQLi-Database-Class") with 2 additional methods.
 
 <hr>
 
@@ -32,19 +32,18 @@ This is a fork of [PHP-MySQLi-Database-Class](https://github.com/ThingEngineer/P
 
 #### New methods:
 **[Bulk Insert](#bulk-insert)**  
-**[Bulk Update](#bulk-update)**
+**[Bulk Update](#bulk-update)**  
 
 ### Installation
-To utilize this class, first import MysqliDb.php into your project, and require it.
-
+To utilize this class, first import `MysqliDb.php` into your project, and require it.
 ```php
-require_once ('MysqliDb.php');
+require_once __DIR__ . '/MysqliDb.php';
 ```
 
 ### Installation with composer
 It is also possible to install library via composer
 ```
-composer require dibbyo456/mysqli-database-class:dev-master
+composer require dibbyo456/mysqli-database-class
 ```
 
 ### Initialization
@@ -835,11 +834,11 @@ Example:
 $db->setLockMethod("READ")->lock(array("users", "log"));
 ```
 This will lock the tables **users** and **log** for **READ** access only.
-Make sure you use **unlock()* afterwards or your tables will remain locked!
+Make sure you use **unlock()** afterwards or your tables will remain locked!
 
 ### Bulk Insert
 
-`bulkInsert()` is similar to `insertMulti()` but works in different way. `insertMulti()` uses a foreach loop to insert data one by one, which is slow. `bulkInsert()` however uses `INSERT INTO` statement to insert multiple data in a single query; which is approx **6x** faster.
+`bulkInsert()` is similar to `insertMulti()` but works differently. `insertMulti()` uses loop to insert data one by one, which is slow. `bulkInsert()` however uses `INSERT INTO` statement to insert multiple data in a single query; which is approx **6x** faster.
 
 ```php
 $data = [
@@ -859,7 +858,7 @@ $db->bulkInsert('my_table', $columns, $data);
 ```
 
 If you set 4th argument to true then
-"INSERT IGNORE" will be used instead of "INSERT"
+`INSERT IGNORE` will be used instead of `INSERT`
 
 Eg:
 
@@ -877,9 +876,9 @@ $db->bulkInsert('my_table', $columns, $data, true);
 
 ### Bulk Update
 
-`bulkUpdate()` can be used to update multiple rows with single query. But it has as caveat. It uses `ON DUPLICATE KEY UPDATE` statment which means a tablemust need a PRIMARY or UNIQUE index key.
+`bulkUpdate()` can be used to update multiple rows with single query. But it has as caveat. It uses `ON DUPLICATE KEY UPDATE` statment which means table must need a `PRIMARY` or `UNIQUE` index key.
 
-**Remember**: The first element of array in `$columns` must need to be PRIMARY or UNIQUE index. In the below example **id** is PRIMARY KEY so it is the first element. Same goes with `$data` array.
+**Remember**: The first element of array in `$columns` must need to be `PRIMARY` or `UNIQUE` index. In the below example **id** is `PRIMARY KEY` thus it is the first element. Same goes with `$data` array.
 
 ```php
 $data = [
