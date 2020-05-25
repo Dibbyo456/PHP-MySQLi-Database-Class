@@ -886,7 +886,7 @@ $data = [
     [8, 'Sam', 88]
 ];
 $columns = ['id', 'name', 'age'];
-$db->bulkInsert('my_table', $columns, $data);
+$db->bulkUpdate('my_table', $columns, $data);
 
 // Gives:
 
